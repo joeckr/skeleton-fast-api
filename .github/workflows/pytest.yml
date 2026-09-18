@@ -11,9 +11,10 @@ jobs:
     permissions:
       contents: read
       pull-requests: write  # Required to post coverage comments
-    uses: joeckr/ci-templates/.github/workflows/pytest.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+    uses: joeckr/ci-templates/.github/workflows/pytest.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
     with:
       python-version: '3.14'
       working-directory: 'src'
+      enable-uv: true
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
