@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.template.name }}
+  labels:
+    app: {{ .Values.template.app }}
+spec:
+  replicas: {{ .Values.template.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.template.app }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.template.app }}
+    spec:
+      {{- with .Values.template.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.template.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      automountServiceAccountToken: false
+      containers:
+        - name: {{ .Values.template.name }}
+          image: "{{ .Values.template.image }}:{{ .Values.template.tag }}"
+          imagePullPolicy: {{ .Values.template.pullPolicy }}
+          {{- with .Values.template.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - containerPort: {{ .Values.template.port }}
+              name: {{ .Values.template.name }}
+          {{- with .Values.template.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.template.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- else }}
+          livenessProbe:
+            httpGet:
+              path: /health/live
+              port: {{ .Values.template.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          {{- end }}
+          {{- with .Values.template.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- else }}
+          readinessProbe:
+            httpGet:
+              path: /health/ready
+              port: {{ .Values.template.port }}
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          {{- end }}
+          {{- with .Values.template.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
