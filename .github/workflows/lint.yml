@@ -1,0 +1,31 @@
+name: Lint Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  actionlint:
+    permissions:
+      contents: read
+    uses: joeckr/ci-templates/.github/workflows/actionlint.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+  commitlint:
+    permissions:
+      contents: read
+    uses: joeckr/ci-templates/.github/workflows/commitlint.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+  hadolint:
+    permissions:
+      contents: read
+    uses: joeckr/ci-templates/.github/workflows/hadolint.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+    with:
+      dockerfile: 'Dockerfile'
+  ruff:
+    permissions:
+      contents: read
+    uses: joeckr/ci-templates/.github/workflows/ruff.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+  shellcheck:
+    permissions:
+      contents: read
+    uses: joeckr/ci-templates/.github/workflows/shellcheck.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1

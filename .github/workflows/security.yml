@@ -1,0 +1,39 @@
+name: Security Audit
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  betterleaks:
+    permissions:
+      contents: read
+    uses: joeckr/ci-templates/.github/workflows/betterleaks.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+  sbom:
+    permissions:
+      contents: read
+    uses: joeckr/ci-templates/.github/workflows/sbom.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+  trivy:
+    permissions:
+      contents: read
+      security-events: write
+    uses: joeckr/ci-templates/.github/workflows/trivy-fs.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+  uv-audit:
+    permissions:
+      contents: read
+    uses: joeckr/ci-templates/.github/workflows/uv-audit.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+    with:
+      working-directory: 'src'
+  uv-lock:
+    permissions:
+      contents: read
+    uses: joeckr/ci-templates/.github/workflows/uv-lock.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+    with:
+      working-directory: 'src'
+  zizmor:
+    permissions:
+      contents: read
+      security-events: write  # required to upload SARIF results to GitHub Advanced Security
+    uses: joeckr/ci-templates/.github/workflows/zizmor.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1

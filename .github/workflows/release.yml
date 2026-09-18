@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    uses: joeckr/ci-templates/.github/workflows/semantic.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+
+  build:
+    needs: [release]
+    if: needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      packages: write
+    uses: joeckr/ci-templates/.github/workflows/build-oci.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+    with:
+      image: 'skeleton-fast-api'
+      version: ${{ needs.release.outputs.version }}
+
+  helm:
+    needs: [release]
+    if: needs.release.outputs.released == 'true' || github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: read
+      packages: write
+    uses: joeckr/ci-templates/.github/workflows/push-helm-ghcr.yml@19ae34059e00de03031c56e9f7cbb98c55519719  # v1.20.1
+    with:
+      charts-dir: 'chart'
