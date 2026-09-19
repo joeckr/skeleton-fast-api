@@ -10,30 +10,30 @@ jobs:
   betterleaks:
     permissions:
       contents: read
-    uses: joeckr/ci-templates/.github/workflows/betterleaks.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
+    uses: joeckr/ci-templates/.github/workflows/betterleaks.yml@578d91388a3f7862fb51c4d2e685586a4d7d1daf  # v1.20.3
   sbom:
     permissions:
       contents: read
-    uses: joeckr/ci-templates/.github/workflows/sbom.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
+    uses: joeckr/ci-templates/.github/workflows/sbom.yml@578d91388a3f7862fb51c4d2e685586a4d7d1daf  # v1.20.3
   trivy:
     permissions:
       contents: read
       security-events: write
-    uses: joeckr/ci-templates/.github/workflows/trivy-fs.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
+    uses: joeckr/ci-templates/.github/workflows/trivy-fs.yml@578d91388a3f7862fb51c4d2e685586a4d7d1daf  # v1.20.3
   uv-audit:
     permissions:
       contents: read
-    uses: joeckr/ci-templates/.github/workflows/uv-audit.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
+    uses: joeckr/ci-templates/.github/workflows/uv-audit.yml@578d91388a3f7862fb51c4d2e685586a4d7d1daf  # v1.20.3
     with:
       working-directory: 'src'
   uv-lock:
     permissions:
       contents: read
-    uses: joeckr/ci-templates/.github/workflows/uv-lock.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
+    uses: joeckr/ci-templates/.github/workflows/uv-lock.yml@578d91388a3f7862fb51c4d2e685586a4d7d1daf  # v1.20.3
     with:
       working-directory: 'src'
   zizmor:
     permissions:
       contents: read
       security-events: write  # required to upload SARIF results to GitHub Advanced Security
-    uses: joeckr/ci-templates/.github/workflows/zizmor.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
+    uses: joeckr/ci-templates/.github/workflows/zizmor.yml@578d91388a3f7862fb51c4d2e685586a4d7d1daf  # v1.20.3

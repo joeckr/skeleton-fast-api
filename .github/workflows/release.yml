@@ -9,7 +9,7 @@ jobs:
   release:
     permissions:
       contents: write
-    uses: joeckr/ci-templates/.github/workflows/semantic.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
+    uses: joeckr/ci-templates/.github/workflows/semantic.yml@578d91388a3f7862fb51c4d2e685586a4d7d1daf  # v1.20.3
 
   build:
     needs: [release]
@@ -17,7 +17,7 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: joeckr/ci-templates/.github/workflows/build-oci.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
+    uses: joeckr/ci-templates/.github/workflows/build-oci.yml@578d91388a3f7862fb51c4d2e685586a4d7d1daf  # v1.20.3
     with:
       image: 'skeleton-fast-api'
       version: ${{ needs.release.outputs.version }}
@@ -28,6 +28,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    uses: joeckr/ci-templates/.github/workflows/push-helm-ghcr.yml@54ae02b59f073afb7522c12e8e2d420d55d6393a  # v1.20.2
+    uses: joeckr/ci-templates/.github/workflows/push-helm-ghcr.yml@578d91388a3f7862fb51c4d2e685586a4d7d1daf  # v1.20.3
     with:
       charts-dir: 'chart'
