@@ -25,7 +25,7 @@ A modular, production-ready FastAPI skeleton designed for containerized deployme
 ```text
 .
 ├── Dockerfile                   # Multi-stage hardened container build using uv
-├── docker-compose.yml           # Local containerized testing
+├── compose.yml                  # Local containerized testing
 ├── mise.toml                    # Tool versions and developer task runner
 ├── hk.pkl                       # Pre-commit / hook configuration (hk)
 ├── chart/                       # Helm chart
