@@ -26,6 +26,7 @@ from startup.cron import lifespan
 from startup.endpoints import setup_endpoints
 from startup.env import Settings, get_settings
 from startup.errors import setup_errors
+from startup.limits import setup_limits
 from startup.logging import setup_logging
 
 
@@ -43,6 +44,7 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
 
     setup_errors(app, app_settings=cfg)
     setup_auth(app, app_settings=cfg)
+    setup_limits(app, app_settings=cfg)
     setup_logging(app, app_settings=cfg)
     setup_cors(app, app_settings=cfg)
     setup_endpoints(app)

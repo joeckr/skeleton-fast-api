@@ -115,6 +115,23 @@ class Settings(BaseSettings):
         description="Interval in seconds for the heartbeat cron job",
     )
 
+    # --- Payload / Request Size Limits ---
+    max_request_size: int = Field(
+        default=10_485_760,
+        ge=1,
+        description="Global fallback maximum request payload size in bytes (default 10MB)",
+    )
+    max_json_size: int = Field(
+        default=1_048_576,
+        ge=1,
+        description="Maximum JSON request payload size in bytes (default 1MB)",
+    )
+    max_upload_size: int = Field(
+        default=20_971_520,
+        ge=1,
+        description="Maximum multipart form and document upload size in bytes (default 20MB)",
+    )
+
     model_config = SettingsConfigDict(
         env_file=(".env", BASE_DIR / ".env", BASE_DIR.parent / ".env"),
         env_file_encoding="utf-8",

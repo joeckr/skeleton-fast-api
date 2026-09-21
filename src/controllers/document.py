@@ -18,14 +18,31 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-from fastapi import FastAPI
+from typing import Any
 
-from endpoints import config, document, health, test, user
+from fastapi import UploadFile
 
 
-def setup_endpoints(app: FastAPI) -> None:
-    app.include_router(test.router)
-    app.include_router(health.router)
-    app.include_router(user.router)
-    app.include_router(config.router)
-    app.include_router(document.router)
+async def process_document_upload(file: UploadFile, description: str | None = None) -> dict[str, Any]:
+    """Process an uploaded document or file, capturing metadata and validating intake."""
+    contents = await file.read()
+    size_bytes = len(contents)
+    await file.seek(0)
+
+    return {
+        "filename": file.filename,
+        "content_type": file.content_type,
+        "size_bytes": size_bytes,
+        "description": description,
+        "status": "received",
+    }
+
+
+def process_form_data(title: str, content: str, category: str | None = None) -> dict[str, Any]:
+    """Process standard form submissions."""
+    return {
+        "title": title,
+        "content": content,
+        "category": category or "general",
+        "status": "processed",
+    }
