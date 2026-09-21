@@ -18,6 +18,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
+
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 
@@ -27,19 +28,10 @@ from startup.env import Settings, get_settings
 router = APIRouter(tags=["Configuration"])
 
 
-class OidcFrontendConfig(BaseModel):
-    issuer_url: str = Field(description="OIDC identity provider issuer URL")
-    client_id: str = Field(description="OIDC client ID for frontend authentication flow")
-
-
 class FrontendConfigResponse(BaseModel):
     app_name: str = Field(description="Name of the application")
     app_env: str = Field(description="Current deployment environment (dev, staging, prod, test)")
     auth_mode: str = Field(description="Active authentication mode (none, basic, oidc)")
-    oidc: OidcFrontendConfig | None = Field(
-        default=None,
-        description="OIDC configuration details (populated only when auth_mode='oidc')",
-    )
 
 
 @router.get(
