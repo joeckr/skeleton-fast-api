@@ -25,16 +25,5 @@ from startup.env import Settings  # pyrefly: ignore [missing-import]
 
 def get_public_config(app_settings: Settings) -> dict[str, Any]:
     """Build safe runtime configuration for frontend applications."""
-    oidc_config = None
-    if app_settings.auth_mode == "oidc":
-        oidc_config = {
-            "issuer_url": app_settings.oidc_issuer_url,
-            "client_id": app_settings.oidc_client_id,
-        }
 
-    return {
-        "app_name": app_settings.app_name,
-        "app_env": app_settings.app_env,
-        "auth_mode": app_settings.auth_mode,
-        "oidc": oidc_config,
-    }
+    return {"app_name": app_settings.app_name, "app_env": app_settings.app_env, "auth_mode": app_settings.auth_mode}

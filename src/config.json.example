@@ -1,0 +1,11 @@
+{
+  "custom_config": {
+    "feature_flags": {
+      "enable_new_dashboard": true
+    },
+    "rate_limits": {
+      "burst": 100,
+      "rate_per_second": 10
+    }
+  }
+}

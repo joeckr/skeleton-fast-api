@@ -48,6 +48,12 @@ def create_app(app_settings: Settings | None = None) -> FastAPI:
     setup_logging(app, app_settings=cfg)
     setup_cors(app, app_settings=cfg)
     setup_endpoints(app)
+
+    if cfg.config_file_loaded:
+        import logging
+
+        logging.getLogger("skeleton").info("Loaded configuration from %s", cfg.config_file_loaded)
+
     return app
 
 

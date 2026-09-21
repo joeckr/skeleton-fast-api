@@ -75,6 +75,7 @@ Configuration is managed via Pydantic `BaseSettings` reading from environment va
 | `MAX_REQUEST_SIZE` | `integer` | `10485760` | Global fallback maximum request payload size in bytes (10MB) |
 | `MAX_JSON_SIZE` | `integer` | `1048576` | Maximum JSON request payload size in bytes (1MB) |
 | `MAX_UPLOAD_SIZE` | `integer` | `20971520` | Maximum multipart form and document upload size in bytes (20MB) |
+| `CONFIG_PATH` | `string` | `""` | Optional explicit path to JSON configuration file (`config.json`) |
 
 ---
 

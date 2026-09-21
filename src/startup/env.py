@@ -20,10 +20,12 @@
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from startup.config import load_custom_config
 
 # Base directory for resolving relative paths (e.g., locating .env files)
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -132,12 +134,33 @@ class Settings(BaseSettings):
         description="Maximum multipart form and document upload size in bytes (default 20MB)",
     )
 
+    # --- JSON Configuration File ---
+    config_path: str | None = Field(
+        default=None,
+        description="Explicit path to JSON configuration file",
+    )
+    config_file_loaded: str | None = Field(
+        default=None,
+        description="Resolved path of JSON configuration file loaded at startup, if found",
+    )
+    custom_config: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Arbitrary nested custom configuration loaded from config.json",
+    )
+
     model_config = SettingsConfigDict(
         env_file=(".env", BASE_DIR / ".env", BASE_DIR.parent / ".env"),
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
     )
+
+    def model_post_init(self, context: Any) -> None:
+        super().model_post_init(context)
+        if not self.custom_config:
+            loaded_data, loaded_file = load_custom_config(self.config_path)
+            self.custom_config = loaded_data
+            self.config_file_loaded = loaded_file
 
     @property
     def is_production(self) -> bool:
