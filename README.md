@@ -72,6 +72,9 @@ Configuration is managed via Pydantic `BaseSettings` reading from environment va
 | `LOG_MODE` | `string` | `"none"` | Log sink (`none` for console stdout) |
 | `CRON_ENABLED` | `boolean` | `true` | Enable background scheduled tasks |
 | `CRON_HEARTBEAT_INTERVAL` | `integer` | `60` | Interval in seconds between heartbeat runs |
+| `MAX_REQUEST_SIZE` | `integer` | `10485760` | Global fallback maximum request payload size in bytes (10MB) |
+| `MAX_JSON_SIZE` | `integer` | `1048576` | Maximum JSON request payload size in bytes (1MB) |
+| `MAX_UPLOAD_SIZE` | `integer` | `20971520` | Maximum multipart form and document upload size in bytes (20MB) |
 
 ---
 
