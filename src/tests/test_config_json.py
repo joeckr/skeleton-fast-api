@@ -86,8 +86,9 @@ def test_no_config_json_works_and_custom_config_is_empty(tmp_path: Path, monkeyp
         resp = client.get("/config")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["custom_config"] == {}
-        assert data["config_file_loaded"] is None
+        assert "app_name" in data
+        assert "custom_config" not in data
+        assert "config_file_loaded" not in data
 
 
 def test_invalid_json_syntax_raises_descriptive_value_error(tmp_path: Path) -> None:
@@ -121,15 +122,18 @@ def test_missing_explicit_config_path_raises_file_not_found() -> None:
     assert "does not exist" in str(exc_info.value)
 
 
-def test_config_endpoint_reflects_custom_config(temp_custom_config: Path) -> None:
-    """The /config diagnostic endpoint should return loaded custom_config and file path."""
+def test_app_retains_custom_config_without_exposing_in_endpoint(temp_custom_config: Path) -> None:
+    """Custom config should be loaded into app settings while /config remains sanitized."""
     settings = Settings(config_path=str(temp_custom_config), auth_mode="none", cron_enabled=False)
     app = create_app(settings)
+
+    assert app.state.settings.config_file_loaded == str(temp_custom_config.resolve())
+    assert app.state.settings.custom_config["feature_flags"]["enable_new_dashboard"] is True
+    assert app.state.settings.custom_config["rate_limits"]["burst"] == 100
 
     with TestClient(app) as client:
         resp = client.get("/config")
         assert resp.status_code == 200
         data = resp.json()
-        assert data["config_file_loaded"] == str(temp_custom_config.resolve())
-        assert data["custom_config"]["feature_flags"]["enable_new_dashboard"] is True
-        assert data["custom_config"]["rate_limits"]["burst"] == 100
+        assert "config_file_loaded" not in data
+        assert "custom_config" not in data
