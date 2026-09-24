@@ -56,16 +56,19 @@ async def authenticate(request: Request, settings: Settings) -> dict[str, Any]:
         decode_kwargs: dict[str, Any] = {
             "algorithms": settings.oidc_algorithms,
             "issuer": settings.oidc_issuer_url.rstrip("/"),
-            "options": {"verify_exp": True},
+            "options": {"verify_exp": True, "verify_aud": False},
         }
-
-        if settings.oidc_client_id:
-            decode_kwargs["audience"] = settings.oidc_client_id
-        else:
-            decode_kwargs["options"]["verify_aud"] = False
 
         payload = jwt.decode(token, signing_key.key, **decode_kwargs)
         payload["auth_mode"] = "oidc"
+
+        if payload.get("azp") != settings.oidc_client_id and payload.get("aud") != settings.oidc_client_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token audience mismatch",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
         return payload
 
     except jwt.ExpiredSignatureError:
