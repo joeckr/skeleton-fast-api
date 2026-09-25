@@ -70,3 +70,4 @@ template:
 service:
   name: fast-api
   port: 8000
+  type: NodePort
