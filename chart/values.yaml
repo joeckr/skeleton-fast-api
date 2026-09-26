@@ -1,5 +1,4 @@
-template:
-  app: fast-api
+app:
   image: ghcr.io/joeckr/skeleton-fast-api
   name: fast-api
   env:
