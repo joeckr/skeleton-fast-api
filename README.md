@@ -79,28 +79,21 @@ Configuration is managed via Pydantic `BaseSettings` reading from environment va
 
 ---
 
-## Security & Compliance Architecture
+## Security & Hardened Image Architecture
 
-Both OpenShift and Talos Linux prioritize workload security and least privilege, but they enforce and evaluate constraints through different mechanisms. This repository is architected to satisfy both environments without code changes.
+Modern hardened Kubernetes environments prioritize workload security and least privilege by enforcing strict runtime constraints. This repository is architected to produce rootless, hardened container images that run out-of-the-box under restricted security standards without requiring root privileges.
 
-### OpenShift Compliance (`restricted-v2` SCC)
+### Hardened Container Standards (Kubernetes PSS `restricted`)
 
-OpenShift uses **Security Context Constraints (SCC)** to control pod permissions. Under the default `restricted-v2` SCC:
-- **Arbitrary Dynamic UIDs**: OpenShift assigns a random UID from a dedicated per-namespace range (e.g., `1000670000`). Containers cannot assume a fixed UID like `1000`.
-- **Root Group (GID 0)**: Files and directories required at runtime must be owned by group 0 (`chgrp -R 0`) with group read/write permissions (`chmod -R g+rwX`) so the dynamically assigned UID can access them. The base Python image (`ghcr.io/joeckr/python:3.14`) configures `/app` with GID 0 ownership.
-- **Dropped Capabilities**: Drops standard root capabilities (`CHOWN`, `DAC_OVERRIDE`, `FOWNER`, `SETUID`, `SETGID`, `SYS_CHROOT`, etc.) and permits only unprivileged operations (and `NET_BIND_SERVICE` when needed).
-- **Unprivileged Ports**: Containers must listen on non-privileged ports (> 1024), such as port `8000`.
-
-### Talos Linux Compliance (Kubernetes PSS `restricted`)
-
-Talos Linux is an immutable, minimal, secure-by-default Kubernetes operating system with no SSH, no interactive shell, and an immutable root filesystem. In Talos clusters:
-- **Pod Security Standards (PSS)**: Workload namespaces enforce the Kubernetes **Pod Security Admission (PSA)** `restricted` profile.
-- **Must Run As Non-Root**: The pod specification sets `securityContext.runAsNonRoot: true`. Containers cannot execute as UID 0.
-- **Drop All Capabilities**: The container specification explicitly drops all Linux capabilities (`capabilities: drop: ["ALL"]`).
-- **Disallow Privilege Escalation**: Sets `securityContext.allowPrivilegeEscalation: false` to prevent child processes from acquiring more privileges than the parent.
-- **Seccomp Profile**: Pods enforce `seccompProfile: { type: RuntimeDefault }`.
-- **Credential Protection**: Hardened with `automountServiceAccountToken: false` to avoid leaking Kubernetes API tokens to application containers.
-- **Health Probes**: Configures HTTP liveness (`/health/live`) and readiness (`/health/ready`) probes bypassing authentication for reliable orchestrator lifecycle management.
+Under the Kubernetes **Pod Security Admission (PSA)** `restricted` profile and modern hardened container runtimes:
+- **Must Run As Non-Root**: The pod specification sets `securityContext.runAsNonRoot: true` with a dedicated non-root UID (`USER 1031` or dynamic non-root UID). Containers cannot execute as UID 0.
+- **Arbitrary Dynamic UIDs**: Workload environments may assign dynamic arbitrary non-root UIDs. Files and directories required at runtime are configured with group 0 permissions (`chgrp -R 0` and `chmod -R g+rwX`) so any non-root UID can execute and access required assets.
+- **Drop All Capabilities**: The container specification explicitly drops all Linux capabilities (`capabilities.drop: ["ALL"]`).
+- **Disallow Privilege Escalation**: Pods enforce `securityContext.allowPrivilegeEscalation: false` to prevent child processes from acquiring additional privileges.
+- **RuntimeDefault Seccomp**: Workloads enforce `seccompProfile: { type: RuntimeDefault }` to restrict syscalls to safe defaults.
+- **Credential Protection**: Hardened with `automountServiceAccountToken: false` to avoid leaking Kubernetes API tokens to application containers unless explicitly needed.
+- **Unprivileged Ports**: Containers listen on non-privileged ports (> 1024).
+- **Standard Ingress & Storage**: Uses standard Kubernetes `networking.k8s.io/v1` `Ingress` and standard CSI PersistentVolumeClaims.
 
 ### Rootless Build Environment Compliance
 
@@ -113,25 +106,24 @@ This repository's `Dockerfile` is engineered for complete rootless build support
 
 ### Compliance Matrix
 
-| Security Dimension | OpenShift (`restricted-v2` SCC) | Talos Linux (Kubernetes PSS `restricted`) | Implementation in This Repo |
-|---|---|---|---|
-| **Build Execution** | Rootless builder compatible | Rootless builder compatible | Builds unprivileged via rootless Podman/Buildah (`mise run build`) |
-| **User ID** | Dynamic arbitrary UID (`MustRunAsRange`) | Non-root UID (`runAsNonRoot: true`) | `USER 1031` in base image + `runAsNonRoot: true` in Helm |
-| **Group Permissions** | Requires GID 0 (`root`) with `g+rwX` | Compatible with GID 0 / unprivileged groups | `chgrp -R 0` & `chmod -R g+rwX` on `/app` in base image |
-| **Capabilities** | Drops root caps; allows `NET_BIND_SERVICE` | Must drop `ALL` capabilities | `capabilities.drop: ["ALL"]` in Helm chart |
-| **Privilege Escalation** | Prohibited | `allowPrivilegeEscalation: false` | Configured in Helm `securityContext` |
-| **Seccomp Profile** | `RuntimeDefault` | `RuntimeDefault` or `Localhost` | `seccompProfile: { type: RuntimeDefault }` |
-| **Service Account Token** | Optional | Recommended disabled | `automountServiceAccountToken: false` in pod spec |
-| **Port Binding** | Unprivileged (> 1024) | Unprivileged (> 1024) | Listens on port `8000` |
-| **Health Probes** | HTTP Probes | HTTP Probes | `/health/live` and `/health/ready` |
-
+| Security Dimension | Restricted Standard Requirement | Implementation in This Repo |
+|---|---|---|
+| **Build Execution** | Unprivileged / rootless builder compatible | Builds unprivileged via rootless Podman/Buildah (`mise run build`) |
+| **User ID** | Non-root UID (`runAsNonRoot: true`) / dynamic UID | `USER 1031` in base image + `runAsNonRoot: true` in Helm |
+| **Group Permissions** | GID 0 (`root` group) with `g+rwX` | `chgrp -R 0` & `chmod -R g+rwX` on `/app` in base image |
+| **Capabilities** | Must drop `ALL` capabilities | `capabilities.drop: ["ALL"]` in Helm chart |
+| **Privilege Escalation** | Prohibited (`allowPrivilegeEscalation: false`) | Configured in Helm `securityContext` |
+| **Seccomp Profile** | `RuntimeDefault` or `Localhost` | `seccompProfile: { type: RuntimeDefault }` |
+| **Service Account Token** | Disabled unless required | `automountServiceAccountToken: false` in pod spec |
+| **Port Binding** | Unprivileged (> 1024) | Listens on port `8000` |
+| **Health Probes** | HTTP Probes | `/health/live` and `/health/ready` |
 ---
 
 ## Local Environment & Podman Setup
 
-To ensure containerized applications and Helm charts tested locally run cleanly when deployed to OpenShift or Talos Linux, this repository is designed to be used alongside the Podman configuration in [joeckr/dotfiles](https://github.com/joeckr/dotfiles).
+To ensure containerized applications and Helm charts tested locally run cleanly when deployed to hardened Kubernetes environments, this repository is designed to be used alongside the Podman configuration in [joeckr/dotfiles](https://github.com/joeckr/dotfiles).
 
-The dotfiles repository provides a centralized [`containers.conf`](https://github.com/joeckr/dotfiles/blob/main/containers/containers.conf) (deployed to `~/.config/containers/containers.conf`) that configures Podman to simulate OpenShift and Talos Linux runtime restrictions:
+The dotfiles repository provides a centralized [`containers.conf`](https://github.com/joeckr/dotfiles/blob/main/containers/containers.conf) (deployed to `~/.config/containers/containers.conf`) that configures Podman to enforce rootless and hardened container runtime restrictions in testing:
 
 | Security Rule | Podman Configuration | Description |
 |---|---|---|
@@ -157,7 +149,7 @@ This repository defines a 3-tier testing process to validate application logic, 
 
 ```
 ┌─────────────────────────┐     ┌─────────────────────────┐     ┌─────────────────────────┐
-│ Tier 1: Local Container │ ──> │ Tier 2: Podman Play     │ ──> │ Tier 3: Talos Cluster   │
+│ Tier 1: Local Container │ ──> │ Tier 2: Podman Play     │ ──> │ Tier 3: K8s Cluster     │
 │ Fast iteration & health │     │ Validate K8s manifests  │     │ Live Helm verification  │
 │ (compose.yml)           │     │ (podman play kube)      │     │ (helm install)          │
 └─────────────────────────┘     └─────────────────────────┘     └─────────────────────────┘
@@ -242,16 +234,15 @@ mise run play-d
 
 ---
 
-### Tier 3: Cluster Deployment & Testing on Talos Linux (`mise run helm-i`)
+### Tier 3: Cluster Deployment & Testing on Kubernetes (`mise run helm-i`)
 
-The final phase validates the workload on a live **Talos Linux** Kubernetes cluster. This tests real-world Pod Security Admission (PSA) enforcement, network connectivity, and application startup under production constraints.
+The final phase validates the workload on a live Kubernetes cluster. This tests real-world Pod Security Admission (PSA) enforcement, network connectivity, and application startup under production constraints.
 
 #### 1. Cluster Prerequisites & Configuration
 
-Ensure your `kubectl` context points to your Talos cluster:
+Ensure your `kubectl` context points to your Kubernetes cluster:
 ```sh
 kubectl config current-context
-# Example: admin@my-talos-cluster
 ```
 
 Verify that the target namespace enforces the `restricted` Pod Security Standard:
@@ -270,7 +261,7 @@ mise run helm-l
 mise run helm-t
 ```
 
-#### 3. Deploying to the Talos Cluster
+#### 3. Deploying to the Cluster
 
 Install the Helm chart release:
 ```sh
@@ -278,9 +269,9 @@ mise run helm-i
 # or: helm install test chart/
 ```
 
-#### 4. Verifying Talos PSS Compliance & Health
+#### 4. Verifying PSS Compliance & Health
 
-Check the pod status and verify that Talos Linux Pod Security Admission (PSA) allowed the pod to run:
+Check the pod status and verify that Kubernetes Pod Security Admission (PSA) allowed the pod to run:
 
 ```sh
 # Check pod deployment status
@@ -308,7 +299,7 @@ curl -f http://localhost:8000/health/live
 curl -f http://localhost:8000/health/ready
 ```
 
-#### 5. Uninstalling from the Talos Cluster
+#### 5. Uninstalling from the Cluster
 
 When testing is complete, clean up the release:
 ```sh
