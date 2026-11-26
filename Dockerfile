@@ -8,7 +8,7 @@ RUN uv sync --frozen --no-dev
 
 COPY src/. .
 
-FROM ghcr.io/joeckr/python:0.2.0
+FROM ghcr.io/joeckr/python:0.3.0
 
 WORKDIR /app
 
