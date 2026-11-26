@@ -45,7 +45,7 @@ app:
     seccompProfile:
       type: RuntimeDefault
   port: 8000
-  pullPolicy: Always
+  pullPolicy: IfNotPresent
   replicaCount: 1
   resources:
     limits:
@@ -57,7 +57,8 @@ app:
     capabilities:
       drop:
         - ALL
-  tag: latest
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
   tolerations:
     - key: "node-role.kubernetes.io/control-plane"
       operator: "Exists"
